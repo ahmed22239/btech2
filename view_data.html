@@ -147,6 +147,9 @@
                         <th>رقم السيارة</th> 
                         <th>نوع الإيصال</th> 
                         <th>حالة الإيصال</th>
+                        <th>المحافظة</th>
+                        <th>المنتج</th>
+                        <th>رقم الدور</th>
                         <th id="receiptEmailHeader" style="display: none;">البريد الإلكتروني للمسجل</th>
                         <th>تعديل</th>
                         <th id="receiptDeleteHeader" style="display: none;">حذف</th>
@@ -189,7 +192,21 @@
         <input type="text" id="editReceiptDriver" placeholder="اسم السائق">
         <input type="text" id="editReceiptDelegate" placeholder="اسم المندوب">
         <input type="text" id="editReceiptCarNumber" placeholder="رقم السيارة">
-        <input type="text" id="editReceiptType" placeholder="نوع الإيصال">
+        <select id="editReceiptType">
+            <option value="بدل مبيت">بدل مبيت</option>
+            <option value="بدل 3 نقلات من المخزن">بدل 3 نقلات من المخزن</option>
+            <option value="بدل 2 نقله خارجي">بدل 2 نقله خارجي</option>
+            <option value="الصعود لدور عالي">الصعود لدور عالي</option>
+        </select>
+        <input type="text" id="editReceiptGovernorate" placeholder="المحافظة">
+        <select id="editReceiptProduct">
+            <option value="">اختر المنتج</option>
+            <option value="ثلاجة">ثلاجة</option>
+            <option value="بوتجاز">بوتجاز</option>
+            <option value="غسالة">غسالة</option>
+            <option value="تكييف 3 حصان">تكييف 3 حصان</option>
+        </select>
+        <input type="number" id="editReceiptFloorNumber" placeholder="رقم الدور">
         <select id="editReceiptStatus" class="status-select" style="display: none;">
             <option value="جاري المراجعة">جاري المراجعة</option>
             <option value="تم المراجعة">تم المراجعة</option>
@@ -255,27 +272,28 @@
         }
 
         function fetchAndDisplayMissions() {
-            const missionsRef = isAdmin ? ref(database, 'missions') : query(ref(database, 'missions'), orderByChild('userEmail'), equalTo(currentUserEmail));
+            const missionsRef = ref(database, 'missions');
             onValue(missionsRef, (snapshot) => {
                 const data = snapshot.val();
                 const missionsTableBody = document.getElementById('missionsTableBody');
                 missionsTableBody.innerHTML = '';
                 for (let id in data) {
                     const mission = data[id];
+                    if (!isAdmin && mission.userEmail !== currentUserEmail) continue;
                     const statusClass = getStatusClass(mission.status);
                     const row = `<tr>
-                        <td>${mission.date}</td>
-                        <td>${mission.driver}</td>
-                        <td>${mission.carNumber}</td>
-                        <td>${mission.delegate}</td>
-                        <td>${mission.direction}</td>
+                        <td>${mission.date || ''}</td>
+                        <td>${mission.driver || ''}</td>
+                        <td>${mission.carNumber || ''}</td>
+                        <td>${mission.delegate || ''}</td>
+                        <td>${mission.direction || ''}</td>
                         <td>${mission.tourNumber || ''}</td>
-                        <td>${mission.startOdometer}</td>
-                        <td>${mission.endOdometer}</td>
-                        <td>${mission.tripDays}</td>
-                        <td>${mission.overnightAllowance}</td>
+                        <td>${mission.startOdometer || ''}</td>
+                        <td>${mission.endOdometer || ''}</td>
+                        <td>${mission.tripDays || ''}</td>
+                        <td>${mission.overnightAllowance || ''}</td>
                         <td class="${statusClass}">${mission.status || 'جاري المراجعة'}</td>
-                        ${isAdmin ? `<td>${mission.userEmail}</td>` : ''}
+                        ${isAdmin ? `<td>${mission.userEmail || ''}</td>` : ''}
                         <td><button class="edit-btn" onclick="openEditMissionForm('${id}')" ${mission.status === 'تم المراجعة' && !isAdmin ? 'disabled' : ''}>تعديل</button></td>
                         ${isAdmin ? `<td><button class="delete-btn" onclick="deleteMission('${id}')">حذف</button></td>` : ''}
                     </tr>`;
@@ -284,25 +302,29 @@
             });
         }
 
-        function fetchAndDisplayReceipts() {
-            const receiptsRef = isAdmin ? ref(database, 'receipts') : query(ref(database, 'receipts'), orderByChild('userEmail'), equalTo(currentUserEmail));
+                function fetchAndDisplayReceipts() {
+            const receiptsRef = ref(database, 'receipts');
             onValue(receiptsRef, (snapshot) => {
                 const data = snapshot.val();
                 const receiptsTableBody = document.getElementById('receiptsTableBody');
                 receiptsTableBody.innerHTML = '';
                 for (let id in data) {
                     const receipt = data[id];
+                    if (!isAdmin && receipt.userEmail !== currentUserEmail) continue;
                     const statusClass = getStatusClass(receipt.status);
                     const row = `<tr>
-                        <td>${receipt.date}</td>
-                        <td>${receipt.driver}</td>
-                        <td>${receipt.delegate}</td>
-                        <td>${receipt.carNumber}</td>
-                        <td>${receipt.receiptType}</td>
+                        <td>${receipt.date || ''}</td>
+                        <td>${receipt.driver || ''}</td>
+                        <td>${receipt.delegate || ''}</td>
+                        <td>${receipt.carNumber || ''}</td>
+                        <td>${receipt.receiptType || ''}</td>
                         <td class="${statusClass}">${receipt.status || 'جاري المراجعة'}</td>
-                        ${isAdmin ? `<td>${receipt.userEmail}</td>` : ''}
+                        <td>${receipt.governorate || ''}</td>
+                        <td>${receipt.product || ''}</td>
+                        <td>${receipt.floorNumber || ''}</td>
+                        ${isAdmin ? `<td>${receipt.userEmail || ''}</td>` : ''}
                         <td><button class="edit-btn" onclick="openEditReceiptForm('${id}')" ${receipt.status === 'تم المراجعة' && !isAdmin ? 'disabled' : ''}>تعديل</button></td>
-                                                ${isAdmin ? `<td><button class="delete-btn" onclick="deleteReceipt('${id}')">حذف</button></td>` : ''}
+                        ${isAdmin ? `<td><button class="delete-btn" onclick="deleteReceipt('${id}')">حذف</button></td>` : ''}
                     </tr>`;
                     receiptsTableBody.innerHTML += row;
                 }
@@ -314,16 +336,16 @@
             onValue(missionRef, (snapshot) => {
                 const mission = snapshot.val();
                 document.getElementById('editMissionId').value = id;
-                document.getElementById('editMissionDate').value = mission.date;
-                document.getElementById('editMissionDriver').value = mission.driver;
-                document.getElementById('editMissionCarNumber').value = mission.carNumber;
-                document.getElementById('editMissionDelegate').value = mission.delegate;
-                document.getElementById('editMissionDirection').value = mission.direction;
+                document.getElementById('editMissionDate').value = mission.date || '';
+                document.getElementById('editMissionDriver').value = mission.driver || '';
+                document.getElementById('editMissionCarNumber').value = mission.carNumber || '';
+                document.getElementById('editMissionDelegate').value = mission.delegate || '';
+                document.getElementById('editMissionDirection').value = mission.direction || '';
                 document.getElementById('editMissionTourNumber').value = mission.tourNumber || '';
-                document.getElementById('editMissionStartOdometer').value = mission.startOdometer;
-                document.getElementById('editMissionEndOdometer').value = mission.endOdometer;
-                document.getElementById('editMissionTripDays').value = mission.tripDays;
-                document.getElementById('editMissionOvernightAllowance').value = mission.overnightAllowance;
+                document.getElementById('editMissionStartOdometer').value = mission.startOdometer || '';
+                document.getElementById('editMissionEndOdometer').value = mission.endOdometer || '';
+                document.getElementById('editMissionTripDays').value = mission.tripDays || '';
+                document.getElementById('editMissionOvernightAllowance').value = mission.overnightAllowance || 'لا';
                 if (isAdmin) {
                     document.getElementById('editMissionStatus').value = mission.status || 'جاري المراجعة';
                 }
@@ -336,11 +358,14 @@
             onValue(receiptRef, (snapshot) => {
                 const receipt = snapshot.val();
                 document.getElementById('editReceiptId').value = id;
-                document.getElementById('editReceiptDate').value = receipt.date;
-                document.getElementById('editReceiptDriver').value = receipt.driver;
-                document.getElementById('editReceiptDelegate').value = receipt.delegate;
-                document.getElementById('editReceiptCarNumber').value = receipt.carNumber;
-                document.getElementById('editReceiptType').value = receipt.receiptType;
+                document.getElementById('editReceiptDate').value = receipt.date || '';
+                document.getElementById('editReceiptDriver').value = receipt.driver || '';
+                document.getElementById('editReceiptDelegate').value = receipt.delegate || '';
+                document.getElementById('editReceiptCarNumber').value = receipt.carNumber || '';
+                document.getElementById('editReceiptType').value = receipt.receiptType || '';
+                document.getElementById('editReceiptGovernorate').value = receipt.governorate || '';
+                document.getElementById('editReceiptProduct').value = receipt.product || '';
+                document.getElementById('editReceiptFloorNumber').value = receipt.floorNumber || '';
                 if (isAdmin) {
                     document.getElementById('editReceiptStatus').value = receipt.status || 'جاري المراجعة';
                 }
@@ -376,7 +401,10 @@
                 driver: document.getElementById('editReceiptDriver').value,
                 delegate: document.getElementById('editReceiptDelegate').value,
                 carNumber: document.getElementById('editReceiptCarNumber').value,
-                receiptType: document.getElementById('editReceiptType').value
+                receiptType: document.getElementById('editReceiptType').value,
+                governorate: document.getElementById('editReceiptGovernorate').value,
+                product: document.getElementById('editReceiptProduct').value,
+                floorNumber: document.getElementById('editReceiptFloorNumber').value
             };
             if (isAdmin) {
                 updatedReceipt.status = document.getElementById('editReceiptStatus').value;
@@ -416,28 +444,20 @@
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
 
-            // تحويل الملف إلى صيغة ثنائية
             const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
-
-            // تحويل البيانات الثنائية إلى Blob
             const blob = new Blob([s2ab(wbout)], { type: 'application/octet-stream' });
-
-            // إنشاء رابط تنزيل مؤقت
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
             a.download = fileName;
             document.body.appendChild(a);
             a.click();
-
-            // تنظيف الرابط المؤقت
             setTimeout(() => {
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
             }, 0);
         }
 
-        // وظيفة مساعدة لتحويل السلسلة إلى مصفوفة ثنائية
         function s2ab(s) {
             const buf = new ArrayBuffer(s.length);
             const view = new Uint8Array(buf);
@@ -482,10 +502,13 @@
                     'اسم المندوب': row.cells[2].innerText,
                     'رقم السيارة': row.cells[3].innerText,
                     'نوع الإيصال': row.cells[4].innerText,
-                    'حالة الإيصال': row.cells[5].innerText
+                    'حالة الإيصال': row.cells[5].innerText,
+                    'المحافظة': row.cells[6].innerText,
+                    'المنتج': row.cells[7].innerText,
+                    'رقم الدور': row.cells[8].innerText
                 };
                 if (isAdmin) {
-                    rowData['البريد الإلكتروني للمسجل'] = row.cells[6].innerText;
+                    rowData['البريد الإلكتروني للمسجل'] = row.cells[9].innerText;
                 }
                 data.push(rowData);
             }
