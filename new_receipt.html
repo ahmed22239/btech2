@@ -33,6 +33,9 @@
         button:hover {
             background-color: #45a049;
         }
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -52,6 +55,15 @@
                 <option value="الصعود لدور عالي">الصعود لدور عالي</option>
             </select>
             <input type="text" id="carNumberInput" placeholder="رقم السيارة" required>
+            <input type="text" id="governorateInput" placeholder="المحافظة" class="hidden">
+            <select id="productInput" class="hidden">
+                <option value="">اختر المنتج</option>
+                <option value="ثلاجة">ثلاجة</option>
+                <option value="بوتجاز">بوتجاز</option>
+                <option value="غسالة">غسالة</option>
+                <option value="تكييف 3 حصان">تكييف 3 حصان</option>
+            </select>
+            <input type="number" id="floorNumberInput" placeholder="رقم الدور" class="hidden">
             <button type="submit">تسجيل</button>
         </form>
         <div id="message"></div>
@@ -89,6 +101,26 @@
         });
 
         const receiptForm = document.getElementById('receiptForm');
+        const receiptTypeInput = document.getElementById('receiptTypeInput');
+        const governorateInput = document.getElementById('governorateInput');
+        const productInput = document.getElementById('productInput');
+        const floorNumberInput = document.getElementById('floorNumberInput');
+
+        receiptTypeInput.addEventListener('change', function() {
+            if (this.value === 'بدل مبيت') {
+                governorateInput.classList.remove('hidden');
+                productInput.classList.add('hidden');
+                floorNumberInput.classList.add('hidden');
+            } else if (this.value === 'الصعود لدور عالي') {
+                governorateInput.classList.add('hidden');
+                productInput.classList.remove('hidden');
+                floorNumberInput.classList.remove('hidden');
+            } else {
+                governorateInput.classList.add('hidden');
+                productInput.classList.add('hidden');
+                floorNumberInput.classList.add('hidden');
+            }
+        });
 
         function loadDriversAndDelegates() {
             const driversRef = ref(database, 'drivers');
@@ -126,19 +158,36 @@
 
         receiptForm.addEventListener('submit', function(e) {
             e.preventDefault();
+            
+            if (!confirm('هل أنت متأكد من صحة البيانات المدخلة؟')) {
+                return;
+            }
+
             const receiptData = {
                 date: document.getElementById('receiptDateInput').value,
                 driver: document.getElementById('driverInput').value,
                 delegate: document.getElementById('delegateInput').value,
-                receiptType: document.getElementById('receiptTypeInput').value,
+                receiptType: receiptTypeInput.value,
                 carNumber: document.getElementById('carNumberInput').value,
                 userEmail: currentUserEmail
             };
+
+            if (receiptTypeInput.value === 'بدل مبيت') {
+                receiptData.governorate = governorateInput.value;
+            }
+
+            if (receiptTypeInput.value === 'الصعود لدور عالي') {
+                receiptData.product = productInput.value;
+                receiptData.floorNumber = floorNumberInput.value;
+            }
 
             push(ref(database, 'receipts'), receiptData)
                 .then(() => {
                     document.getElementById('message').textContent = 'تم تسجيل الإيصال بنجاح!';
                     receiptForm.reset();
+                    governorateInput.classList.add('hidden');
+                    productInput.classList.add('hidden');
+                    floorNumberInput.classList.add('hidden');
                 })
                 .catch((error) => {
                     document.getElementById('message').textContent = 'حدث خطأ: ' + error.message;
