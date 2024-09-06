@@ -389,22 +389,48 @@
         }
 
         window.downloadExcel = function(type) {
-            let data;
-            let fileName;
-            if (type === 'missions') {
-                data = getMissionsData();
-                fileName = 'المأموريات.xlsx';
-            } else if (type === 'receipts') {
-                data = getReceiptsData();
-                fileName = 'الإيصالات.xlsx';
-            }
+    let data;
+    let fileName;
+    if (type === 'missions') {
+        data = getMissionsData();
+        fileName = 'المأموريات.xlsx';
+    } else if (type === 'receipts') {
+        data = getReceiptsData();
+        fileName = 'الإيصالات.xlsx';
+    }
 
-            const ws = XLSX.utils.json_to_sheet(data);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
 
-            XLSX.writeFile(wb, fileName);
-        }
+    // تحويل الملف إلى صيغة ثنائية
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'binary' });
+
+    // تحويل البيانات الثنائية إلى Blob
+    const blob = new Blob([s2ab(wbout)], { type: 'application/octet-stream' });
+
+    // إنشاء رابط تنزيل مؤقت
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+
+    // تنظيف الرابط المؤقت
+    setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }, 0);
+}
+
+// وظيفة مساعدة لتحويل السلسلة إلى مصفوفة ثنائية
+function s2ab(s) {
+    const buf = new ArrayBuffer(s.length);
+    const view = new Uint8Array(buf);
+    for (let i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xFF;
+    return buf;
+}
 
         function getMissionsData() {
             const table = document.getElementById('missionsTable');
