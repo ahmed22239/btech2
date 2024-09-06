@@ -103,6 +103,7 @@
                 <option value="">اختر اسم المندوب</option>
             </select>
             <input type="text" id="directionInput" placeholder="اتجاه الرحلة" required>
+            <input type="text" id="tourNumberInput" placeholder="رقم الجولة أو الإذن" required>
             <input type="number" id="startOdometerInput" placeholder="عداد البداية" required>
             <input type="number" id="endOdometerInput" placeholder="عداد النهاية" required>
             <select id="tripDaysInput" required>
@@ -234,6 +235,7 @@
                 carNumber: document.getElementById('carNumberInput').value,
                 delegate: document.getElementById('delegateInput').value,
                 direction: document.getElementById('directionInput').value,
+                tourNumber: document.getElementById('tourNumberInput').value,
                 startOdometer: document.getElementById('startOdometerInput').value,
                 endOdometer: document.getElementById('endOdometerInput').value,
                 tripDays: document.getElementById('tripDaysInput').value,
